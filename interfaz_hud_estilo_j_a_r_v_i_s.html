@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S. // Sistema de Interfaz Holográfica</title>
+    <!-- Tailwind CSS para estructura responsiva y utilidades rápidas -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fuentes futuristas de Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Variables de color del tema Stark / J.A.R.V.I.S. */
+        :root {
+            --jarvis-cyan: #00f3ff;
+            --jarvis-blue: #0066ff;
+            --jarvis-dark: #020813;
+            --jarvis-panel: rgba(4, 22, 42, 0.65);
+            --jarvis-alert: #ff3b30;
+            --jarvis-warn: #ffaa00;
+        }
+
+        * {
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: var(--jarvis-cyan) rgba(0, 243, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--jarvis-dark);
+            color: var(--jarvis-cyan);
+            font-family: 'Share Tech Mono', monospace;
+            overflow-x: hidden;
+            min-height: 100vh;
+            margin: 0;
+            /* Cuadrícula táctica de fondo + viñeta radial */
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.15) 0%, rgba(2, 8, 19, 0.95) 85%),
+                linear-gradient(rgba(0, 243, 255, 0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.06) 1px, transparent 1px);
+            background-size: 100% 100%, 35px 35px, 35px 35px;
+        }
+
+        /* Tipografía para títulos */
+        .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Efecto de brillo holográfico */
+        .glow-text {
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.7), 0 0 18px rgba(0, 102, 255, 0.5);
+        }
+
+        .glow-border {
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.15), inset 0 0 15px rgba(0, 243, 255, 0.08);
+            border: 1px solid rgba(0, 243, 255, 0.35);
+        }
+
+        /* Paneles HUD con esquinas recortadas estilo sci-fi */
+        .hud-panel {
+            background: var(--jarvis-panel);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 243, 255, 0.3);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .hud-panel::before, .hud-panel::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-color: var(--jarvis-cyan);
+            border-style: solid;
+            pointer-events: none;
+        }
+
+        .hud-panel::before {
+            top: -1px;
+            left: -1px;
+            border-width: 2px 0 0 2px;
+        }
+
+        .hud-panel::after {
+            bottom: -1px;
+            right: -1px;
+            border-width: 0 2px 2px 0;
+        }
+
+        /* Animaciones de rotación para el Núcleo Central (Arc Reactor / J.A.R.V.I.S. Core) */
+        @keyframes spin-cw {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes spin-ccw {
+            from { transform: rotate(360deg); }
+            to { transform: rotate(0deg); }
+        }
+
+        @keyframes pulse-core {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 12px rgba(0, 243, 255, 0.8)); }
+            50% { transform: scale(1.06); filter: drop-shadow(0 0 25px rgba(0, 243, 255, 1)); }
+        }
+
+        @keyframes speaking-wave {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            25% { transform: scale(1.14); opacity: 1; }
+            50% { transform: scale(0.95); opacity: 0.85; }
+            75% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .ring-cw-slow {
+            transform-origin: center;
+            animation: spin-cw 28s linear infinite;
+        }
+
+        .ring-ccw-medium {
+            transform-origin: center;
+            animation: spin-ccw 16s linear infinite;
+        }
+
+        .ring-cw-fast {
+            transform-origin: center;
+            animation: spin-cw 8s linear infinite;
+        }
+
+        .core-pulse {
+            transform-origin: center;
+            animation: pulse-core 3s ease-in-out infinite;
+        }
+
+        /* Clase activa cuando J.A.R.V.I.S. está hablando */
+        .jarvis-speaking .core-pulse {
+            animation: speaking-wave 0.45s ease-in-out infinite !important;
+            filter: drop-shadow(0 0 30px #00f3ff) !important;
+        }
+
+        /* Clase activa cuando J.A.R.V.I.S. está procesando/pensando con IA */
+        .jarvis-thinking .ring-cw-fast {
+            animation: spin-cw 1.5s linear infinite !important;
+        }
+        .jarvis-thinking .ring-ccw-medium {
+            animation: spin-ccw 2.5s linear infinite !important;
+        }
+        .jarvis-thinking .core-pulse {
+            filter: drop-shadow(0 0 35px #ffffff) !important;
+        }
+
+        /* Animación de botón de micrófono escuchando */
+        @keyframes mic-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); }
+            50% { box-shadow: 0 0 0 12px rgba(255, 59, 48, 0); }
+        }
+        .mic-listening {
+            background-color: rgba(255, 59, 48, 0.25) !important;
+            border-color: #ff3b30 !important;
+            color: #ff8a80 !important;
+            animation: mic-pulse 1.5s infinite;
+        }
+
+        /* Modo Alerta / Protocolo */
+        body.protocol-alert {
+            --jarvis-cyan: #ff3b30;
+            --jarvis-blue: #ff9500;
+        }
+
+        /* Línea de escaneo sutil en pantalla */
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 243, 255, 0.03) 50%,
+                rgba(0, 243, 255, 0.03)
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 40;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between p-3 sm:p-5 lg:p-6 select-none">
+
+    <!-- Efecto visual de monitor CRT/Holograma -->
+    <div class="scanline"></div>
+
+    <!-- PANTALLA DE INICIALIZACIÓN (Desbloquea audio y voz del navegador al entrar) -->
+    <div id="boot-overlay" class="fixed inset-0 z-50 bg-[#020813]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center transition-opacity duration-700">
+        <div class="w-24 h-24 mb-6 relative flex items-center justify-center">
+            <div class="absolute inset-0 rounded-full border-2 border-dashed border-cyan-400 animate-spin"></div>
+            <div class="w-14 h-14 rounded-full bg-cyan-500/20 border border-cyan-300 flex items-center justify-center shadow-[0_0_25px_#00f3ff]">
+                <span class="font-orbitron font-bold text-xl text-cyan-200">J</span>
+            </div>
+        </div>
+        <h1 class="font-orbitron text-2xl sm:text-4xl font-bold tracking-widest text-cyan-300 glow-text mb-2">
+            STARK INDUSTRIES // OS
+        </h1>
+        <p class="text-cyan-400/80 text-sm sm:text-base max-w-md mb-8">
+            SISTEMA DE INTELIGENCIA ARTIFICIAL J.A.R.V.I.S. EN ESPERA DE AUTORIZACIÓN BIOMÉTRICA.
+        </p>
+        <button id="btn-initialize" class="px-8 py-4 rounded-md bg-cyan-500/15 hover:bg-cyan-400/30 border-2 border-cyan-400 text-cyan-200 font-orbitron font-bold tracking-widest text-sm sm:text-base shadow-[0_0_25px_rgba(0,243,255,0.4)] hover:shadow-[0_0_35px_rgba(0,243,255,0.8)] transition-all cursor-pointer active:scale-95">
+            [ INICIALIZAR SISTEMA J.A.R.V.I.S. ]
+        </button>
+    </div>
+
+    <!-- BARRA SUPERIOR HUD (HEADER) -->
+    <header class="w-full max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-cyan-500/30 z-10">
+        <div class="flex items-center gap-3">
+            <div class="w-3 h-3 rounded-full bg-cyan-400 animate-ping"></div>
+            <div>
+                <h1 class="font-orbitron font-bold text-lg sm:text-2xl tracking-wider glow-text">
+                    J.A.R.V.I.S. <span class="text-xs sm:text-sm font-normal opacity-75">MARK LXXXV // AI CORE</span>
+                </h1>
+                <p class="text-[11px] sm:text-xs opacity-70 tracking-widest">JUST A RATHER VERY INTELLIGENT SYSTEM</p>
+            </div>
+        </div>
+
+        <!-- Controles de Audio, Selector de Voz y Estado -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div class="hidden xl:flex flex-col text-right text-xs opacity-80 mr-2">
+                <span id="hud-date">CARGANDO FECHA...</span>
+                <span id="hud-clock" class="font-orbitron text-sm font-bold text-cyan-300">00:00:00</span>
+            </div>
+
+            <!-- Selector de Voz de J.A.R.V.I.S. para elegir la mejor voz del dispositivo -->
+            <select id="voice-selector" title="Seleccionar timbre de voz de J.A.R.V.I.S." class="bg-[#04162a] border border-cyan-500/40 rounded px-2 py-2 text-xs text-cyan-200 max-w-[140px] sm:max-w-[190px] focus:outline-none focus:border-cyan-300 cursor-pointer">
+                <option value="">Voz Automática (ES)</option>
+            </select>
+
+            <button id="btn-toggle-audio" class="px-3 py-2 rounded hud-panel text-xs sm:text-sm flex items-center gap-2 hover:bg-cyan-500/20 cursor-pointer" title="Activar/Desactivar Voz y Efectos">
+                <span id="audio-icon">🔊</span>
+                <span id="audio-label" class="font-orbitron">VOZ: ON</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- CONTENIDO PRINCIPAL (3 COLUMNAS EN DESKTOP, APILADO EN MÓVIL) -->
+    <main class="w-full max-w-7xl mx-auto my-4 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5 items-stretch flex-grow z-10">
+        
+        <!-- PANEL IZQUIERDO: TELEMETRÍA DEL SISTEMA + MENÚ DE TU SITIO WEB -->
+        <section class="lg:col-span-3 flex flex-col gap-4 order-2 lg:order-1">
+            
+            <!-- =========================================================================
+                 SECCIÓN PERSONALIZABLE DE TU SITIO WEB:
+                 Aquí puedes poner los enlaces o secciones reales de tu página web
+                 ========================================================================= -->
+            <nav class="hud-panel rounded-lg p-4">
+                <div class="flex justify-between items-center border-b border-cyan-500/20 pb-2 mb-3">
+                    <h2 class="font-orbitron text-xs font-bold tracking-widest">MÓDULOS DEL SITIO WEB</h2>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-400/40">ACCESO</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs font-orbitron">
+                    <!-- Cambia los href="#..." por las URLs o secciones de tu web -->
+                    <a href="#inicio" onclick="askJarvis('Muéstrame un resumen de bienvenida del sitio web')" class="p-2 rounded bg-cyan-500/10 hover:bg-cyan-400/25 border border-cyan-500/30 text-center transition">
+                        INICIO
+                    </a>
+                    <a href="#proyectos" onclick="askJarvis('¿Qué proyectos o servicios ofrecemos en esta plataforma?')" class="p-2 rounded bg-cyan-500/10 hover:bg-cyan-400/25 border border-cyan-500/30 text-center transition">
+                        PROYECTOS
+                    </a>
+                    <a href="#servicios" onclick="askJarvis('Explícame nuestras capacidades tecnológicas y servicios')" class="p-2 rounded bg-cyan-500/10 hover:bg-cyan-400/25 border border-cyan-500/30 text-center transition">
+                        SERVICIOS
+                    </a>
+                    <a href="#contacto" onclick="askJarvis('¿Cómo puedo ponerme en contacto con el equipo?')" class="p-2 rounded bg-cyan-500/10 hover:bg-cyan-400/25 border border-cyan-500/30 text-center transition">
+                        CONTACTO
+                    </a>
+                </div>
+            </nav>
+
+            <!-- Métricas de Hardware y Núcleo IA -->
+            <div class="hud-panel rounded-lg p-4">
+                <div class="flex justify-between items-center border-b border-cyan-500/20 pb-2 mb-3">
+                    <h2 class="font-orbitron text-xs font-bold tracking-widest">DIAGNÓSTICO NÚCLEO IA</h2>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-400/40 text-emerald-300">NEURAL OK</span>
+                </div>
+
+                <!-- CPU -->
+                <div class="mb-2.5">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span>RED NEURONAL GEMINI</span>
+                        <span id="val-cpu" class="font-bold">34%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-cyan-950 rounded-full overflow-hidden border border-cyan-500/30">
+                        <div id="bar-cpu" class="h-full bg-cyan-400 transition-all duration-500" style="width: 34%"></div>
+                    </div>
+                </div>
+
+                <!-- MEMORIA -->
+                <div class="mb-2.5">
+                    <div class="flex justify-between text-xs mb-1">
+                        <span>MEMORIA CONTEXTUAL</span>
+                        <span id="val-ram" class="font-bold">58%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-cyan-950 rounded-full overflow-hidden border border-cyan-500/30">
+                        <div id="bar-ram" class="h-full bg-blue-400 transition-all duration-500" style="width: 58%"></div>
+                    </div>
+                </div>
+
+                <!-- ENERGÍA REACTOR -->
+                <div>
+                    <div class="flex justify-between text-xs mb-1">
+                        <span>REACTOR ARC (SALIDA)</span>
+                        <span id="val-arc" class="font-bold">98.4%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-cyan-950 rounded-full overflow-hidden border border-cyan-500/30">
+                        <div id="bar-arc" class="h-full bg-cyan-300 transition-all duration-500" style="width: 98.4%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualizador de Onda de Voz (Canvas) y Red -->
+            <div class="hud-panel rounded-lg p-4 text-xs flex-grow flex flex-col justify-between">
+                <div>
+                    <h2 class="font-orbitron text-xs font-bold tracking-widest border-b border-cyan-500/20 pb-2 mb-2">
+                        MODULACIÓN VOCAL
+                    </h2>
+                    <canvas id="voice-visualizer" class="w-full h-14 rounded bg-cyan-950/40 border border-cyan-500/20 mb-3"></canvas>
+                </div>
+                <div class="space-y-1.5">
+                    <div class="flex justify-between">
+                        <span class="opacity-70">ENLACE SATELITAL:</span>
+                        <span class="text-emerald-400 font-bold">ACTIVO</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="opacity-70">BÚSQUEDA GLOBAL:</span>
+                        <span class="text-cyan-300">CONECTADA</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="opacity-70">LATENCIA:</span>
+                        <span id="val-ping">12 ms</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NÚCLEO CENTRAL INTERACTIVO (SVG ANIMADO + BOTÓN DE VOZ) -->
+        <section class="lg:col-span-5 flex flex-col items-center justify-center order-1 lg:order-2 py-2">
+            <div id="jarvis-core-wrapper" class="relative w-60 h-60 sm:w-72 sm:h-72 flex items-center justify-center cursor-pointer group" title="Haz clic para hablar con J.A.R.V.I.S.">
+                
+                <!-- SVG Holográfico Multicapa -->
+                <svg viewBox="0 0 300 300" class="w-full h-full overflow-visible">
+                    <defs>
+                        <radialGradient id="coreGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+                            <stop offset="35%" stop-color="#00f3ff" stop-opacity="0.8"/>
+                            <stop offset="70%" stop-color="#0066ff" stop-opacity="0.25"/>
+                            <stop offset="100%" stop-color="#00f3ff" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+
+                    <!-- Resplandor de fondo -->
+                    <circle cx="150" cy="150" r="110" fill="url(#coreGlow)" class="core-pulse" />
+
+                    <!-- Anillo Exterior Segmentado (Gira lento horario) -->
+                    <g class="ring-cw-slow">
+                        <circle cx="150" cy="150" r="138" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="40 15 10 15" opacity="0.6" />
+                        <circle cx="150" cy="150" r="130" fill="none" stroke="currentColor" stroke-width="3" stroke-dasharray="80 120" opacity="0.8" />
+                    </g>
+
+                    <!-- Anillo Medio Técnico (Gira antihorario) -->
+                    <g class="ring-ccw-medium">
+                        <circle cx="150" cy="150" r="108" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="6 10" opacity="0.85" />
+                        <circle cx="150" cy="150" r="96" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="50 40 15 40" opacity="0.75" />
+                    </g>
+
+                    <!-- Anillo Interior Rápido -->
+                    <g class="ring-cw-fast">
+                        <circle cx="150" cy="150" r="74" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="25 25" opacity="0.95" />
+                        <polygon points="150,82 155,92 145,92" fill="currentColor" />
+                        <polygon points="150,218 155,208 145,208" fill="currentColor" />
+                    </g>
+
+                    <!-- Núcleo Central -->
+                    <circle cx="150" cy="150" r="46" fill="rgba(0, 243, 255, 0.15)" stroke="currentColor" stroke-width="2.5" class="core-pulse" />
+                    <circle cx="150" cy="150" r="32" fill="rgba(0, 243, 255, 0.3)" stroke="#ffffff" stroke-width="1" class="core-pulse" />
+                </svg>
+
+                <!-- Etiqueta Central sobre el SVG -->
+                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span class="font-orbitron font-black text-sm sm:text-base tracking-widest text-white drop-shadow-[0_0_8px_#00f3ff]">
+                        J.A.R.V.I.S.
+                    </span>
+                    <span id="core-status-text" class="text-[10px] tracking-widest text-cyan-200 mt-0.5">
+                        EN LÍNEA
+                    </span>
+                </div>
+            </div>
+
+            <!-- Botón Principal de Reconocimiento de Voz (Micrófono) -->
+            <button id="btn-mic" class="mt-3 px-5 py-2.5 rounded-full hud-panel border border-cyan-400/70 hover:bg-cyan-400/25 flex items-center gap-2.5 font-orbitron text-xs sm:text-sm font-bold tracking-wider shadow-[0_0_20px_rgba(0,243,255,0.25)] transition cursor-pointer active:scale-95">
+                <span id="mic-icon" class="text-base">🎙️</span>
+                <span id="mic-label">HABLAR CON J.A.R.V.I.S.</span>
+            </button>
+
+            <!-- Botones de Comandos y Preguntas Rápidas -->
+            <div class="flex flex-wrap justify-center gap-2 mt-4 max-w-md">
+                <button onclick="askJarvis('Realiza un diagnóstico completo de todos los sistemas')" class="px-2.5 py-1.5 rounded hud-panel text-[11px] font-orbitron hover:bg-cyan-400/25 cursor-pointer transition">
+                    DIAGNÓSTICO
+                </button>
+                <button onclick="askJarvis('Activar protocolo fiesta en casa')" class="px-2.5 py-1.5 rounded hud-panel text-[11px] font-orbitron hover:bg-cyan-400/25 cursor-pointer transition">
+                    PROTOCOLO FIESTA
+                </button>
+                <button onclick="askJarvis('Explícame de forma breve cómo funciona la física cuántica')" class="px-2.5 py-1.5 rounded hud-panel text-[11px] font-orbitron hover:bg-cyan-400/25 cursor-pointer transition">
+                    FÍSICA CUÁNTICA
+                </button>
+                <button onclick="askJarvis('¿Cuál es la fecha, hora actual y las noticias tecnológicas más relevantes de hoy?')" class="px-2.5 py-1.5 rounded hud-panel text-[11px] font-orbitron hover:bg-cyan-400/25 cursor-pointer transition">
+                    INFORME GLOBAL
+                </button>
+            </div>
+        </section>
+
+        <!-- PANEL DERECHO: CONSOLA DE INTELIGENCIA ARTIFICIAL Y TERMINAL -->
+        <section class="lg:col-span-4 flex flex-col h-[410px] sm:h-[460px] hud-panel rounded-lg p-4 order-3">
+            <div class="flex justify-between items-center border-b border-cyan-500/20 pb-2 mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <h2 class="font-orbitron text-xs font-bold tracking-widest">INTERFAZ NEURAL J.A.R.V.I.S.</h2>
+                </div>
+                <button onclick="clearTerminal()" class="text-[10px] opacity-70 hover:opacity-100 underline cursor-pointer">
+                    LIMPIAR CHAT
+                </button>
+            </div>
+
+            <!-- Historial de conversación con IA -->
+            <div id="terminal-output" class="flex-grow overflow-y-auto space-y-3 pr-1.5 text-xs sm:text-sm leading-relaxed select-text">
+                <div class="opacity-60">[SISTEMA] Esperando inicialización del núcleo cognitivo...</div>
+            </div>
+
+            <!-- Formulario de entrada de preguntas para la IA -->
+            <form id="command-form" class="mt-3 pt-2.5 border-t border-cyan-500/30 flex gap-2">
+                <input 
+                    type="text" 
+                    id="command-input" 
+                    placeholder="Pregunta cualquier cosa a J.A.R.V.I.S..." 
+                    autocomplete="off"
+                    class="w-full bg-cyan-950/60 border border-cyan-500/40 rounded px-3 py-2.5 text-xs sm:text-sm text-cyan-100 placeholder-cyan-500/50 focus:outline-none focus:border-cyan-300"
+                />
+                <button type="submit" id="btn-send" class="px-4 py-2.5 rounded bg-cyan-500/25 hover:bg-cyan-400/40 border border-cyan-400/60 font-orbitron text-xs font-bold cursor-pointer transition">
+                    ENVIAR
+                </button>
+            </form>
+        </section>
+
+    </main>
+
+    <!-- PIE DE PÁGINA HUD -->
+    <footer class="w-full max-w-7xl mx-auto pt-3 border-t border-cyan-500/20 flex flex-col sm:flex-row justify-between items-center text-[11px] opacity-70 gap-2 z-10">
+        <div>STARK INDUSTRIES // ASISTENTE DE INTELIGENCIA ARTIFICIAL INTEGRADO</div>
+        <div>PUEDES HABLAR POR MICRÓFONO O ESCRIBIR CUALQUIER CONSULTA</div>
+    </footer>
+
+    <!-- LÓGICA DE J.A.R.V.I.S. (GEMINI AI, RECONOCIMIENTO DE VOZ, SÍNTESIS VOCAL Y TELEMETRÍA) -->
+    <script>
+        // Estado global del sistema
+        const state = {
+            initialized: false,
+            audioEnabled: true,
+            alertMode: false,
+            isSpeaking: false,
+            isThinking: false,
+            isListening: false,
+            audioCtx: null,
+            selectedVoiceURI: '',
+            chatHistory: [] // Memoria de conversación para contexto continuo
+        };
+
+        // Configuración de personalidad de J.A.R.V.I.S. para la IA
+        const JARVIS_SYSTEM_PROMPT = `Eres J.A.R.V.I.S. (Just A Rather Very Intelligent System), la inteligencia artificial creada por Tony Stark. 
+        Responde siempre en español con elegancia británica, serenidad, precisión técnica, ingenio sutil y formalidad servicial. 
+        Dirígete al usuario ocasionalmente como "Señor" o "Jefe". 
+        Puedes responder absolutamente cualquier pregunta (ciencia, programación, historia, consejos, cálculos, redacción o consultas generales). 
+        Mantén tus respuestas claras, directas y bien estructuradas (idealmente entre 2 y 5 oraciones, salvo que el usuario pida código o una explicación extensa), evitando símbolos markdown complejos como asteriscos múltiples para que la síntesis de voz suene natural y fluida.`;
+
+        // Referencias al DOM
+        const bootOverlay = document.getElementById('boot-overlay');
+        const btnInitialize = document.getElementById('btn-initialize');
+        const btnToggleAudio = document.getElementById('btn-toggle-audio');
+        const voiceSelector = document.getElementById('voice-selector');
+        const audioIcon = document.getElementById('audio-icon');
+        const audioLabel = document.getElementById('audio-label');
+        const terminalOutput = document.getElementById('terminal-output');
+        const commandForm = document.getElementById('command-form');
+        const commandInput = document.getElementById('command-input');
+        const coreWrapper = document.getElementById('jarvis-core-wrapper');
+        const coreStatusText = document.getElementById('core-status-text');
+        const btnMic = document.getElementById('btn-mic');
+        const micLabel = document.getElementById('mic-label');
+
+        /**
+         * Sintetizador de efectos de sonido futuristas (Web Audio API)
+         */
+        function playSoundEffect(type = 'beep') {
+            if (!state.audioEnabled) return;
+            try {
+                if (!state.audioCtx) {
+                    state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (state.audioCtx.state === 'suspended') {
+                    state.audioCtx.resume();
+                }
+
+                const osc = state.audioCtx.createOscillator();
+                const gain = state.audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(state.audioCtx.destination);
+
+                const now = state.audioCtx.currentTime;
+
+                if (type === 'boot') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.45);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'beep') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(920, now);
+                    osc.frequency.exponentialRampToValueAtTime(1250, now + 0.08);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+                    osc.start(now);
+                    osc.stop(now + 0.09);
+                } else if (type === 'thinking') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(520, now);
+                    osc.frequency.exponentialRampToValueAtTime(680, now + 0.15);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+                    osc.start(now);
+                    osc.stop(now + 0.16);
+                } else if (type === 'alert') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.linearRampToValueAtTime(280, now + 0.25);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch (e) {
+                console.warn('AudioContext no disponible:', e);
+            }
+        }
+
+        /**
+         * Carga y clasifica las mejores voces masculinas en español para J.A.R.V.I.S.
+         */
+        function populateVoices() {
+            if (!('speechSynthesis' in window)) return;
+            const voices = window.speechSynthesis.getVoices();
+            const esVoices = voices.filter(v => v.lang.toLowerCase().includes('es'));
+
+            voiceSelector.innerHTML = '';
+            if (esVoices.length === 0) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = 'Voz Predeterminada';
+                voiceSelector.appendChild(opt);
+                return;
+            }
+
+            // Priorizar voces masculinas/naturales conocidas (Jorge, Alvaro, Pablo, Alonso, Microsoft, Google)
+            const preferredKeywords = ['jorge', 'alvaro', 'álvaro', 'pablo', 'alonso', 'diego', 'raul', 'raúl', 'carlos', 'male', 'hombre', 'natural', 'google'];
+            esVoices.sort((a, b) => {
+                const aScore = preferredKeywords.findIndex(k => a.name.toLowerCase().includes(k));
+                const bScore = preferredKeywords.findIndex(k => b.name.toLowerCase().includes(k));
+                const normA = aScore === -1 ? 99 : aScore;
+                const normB = bScore === -1 ? 99 : bScore;
+                return normA - normB;
+            });
+
+            esVoices.forEach((voice, idx) => {
+                const opt = document.createElement('option');
+                opt.value = voice.voiceURI;
+                opt.textContent = `${voice.name.replace(/Microsoft |Google /g, '')} (${voice.lang})`;
+                if (idx === 0 && !state.selectedVoiceURI) {
+                    state.selectedVoiceURI = voice.voiceURI;
+                }
+                if (voice.voiceURI === state.selectedVoiceURI) {
+                    opt.selected = true;
+                }
+                voiceSelector.appendChild(opt);
+            });
+        }
+
+        voiceSelector.addEventListener('change', (e) => {
+            state.selectedVoiceURI = e.target.value;
+            jarvisSpeak('Calibración de timbre vocal completada, Señor.');
+        });
+
+        /**
+         * Síntesis de Voz estilo J.A.R.V.I.S. (Tono profundo, sereno y articulado)
+         */
+        function jarvisSpeak(text) {
+            if (!state.audioEnabled || !('speechSynthesis' in window)) return;
+
+            window.speechSynthesis.cancel();
+
+            // Limpiar caracteres markdown o bloques de código largos para lectura natural
+            const cleanText = text
+                .replace(/```[\s\S]*?```/g, 'He proyectado el código solicitado en su terminal, Señor.')
+                .replace(/[*#_`~]/g, '')
+                .replace(/https?:\/\/\S+/g, 'enlace en pantalla');
+
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = 'es-ES';
+            // Ajuste acústico estilo mayordomo británico / J.A.R.V.I.S.
+            utterance.pitch = 0.88; 
+            utterance.rate = 1.03;  
+
+            const voices = window.speechSynthesis.getVoices();
+            const chosenVoice = voices.find(v => v.voiceURI === state.selectedVoiceURI) 
+                             || voices.find(v => v.lang.toLowerCase().includes('es'));
+            if (chosenVoice) {
+                utterance.voice = chosenVoice;
+            }
+
+            utterance.onstart = () => {
+                state.isSpeaking = true;
+                coreWrapper.classList.add('jarvis-speaking');
+                coreStatusText.textContent = 'HABLANDO...';
+            };
+
+            utterance.onend = () => {
+                state.isSpeaking = false;
+                coreWrapper.classList.remove('jarvis-speaking');
+                coreStatusText.textContent = state.alertMode ? 'PROTOCOLO ACTIVO' : 'EN LÍNEA';
+            };
+
+            utterance.onerror = () => {
+                state.isSpeaking = false;
+                coreWrapper.classList.remove('jarvis-speaking');
+                coreStatusText.textContent = 'EN LÍNEA';
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+
+        /**
+         * Consulta a la API de Gemini con reintentos exponenciales y búsqueda en Google
+         */
+        async function queryGeminiAI(userPrompt) {
+            const apiKey = ""; // En el entorno de Canvas se inyecta automáticamente; en tu web propia pega tu API Key de Google AI Studio aquí.
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            // Añadir mensaje del usuario al historial de conversación
+            state.chatHistory.push({
+                role: "user",
+                parts: [{ text: userPrompt }]
+            });
+
+            // Mantener los últimos 12 turnos para contexto ágil
+            if (state.chatHistory.length > 12) {
+                state.chatHistory = state.chatHistory.slice(-12);
+            }
+
+            const payload = {
+                contents: state.chatHistory,
+                tools: [{ "google_search": {} }],
+                systemInstruction: {
+                    parts: [{ text: JARVIS_SYSTEM_PROMPT }]
+                }
+            };
+
+            const delays = [1000, 2000, 4000];
+            for (let attempt = 0; attempt <= delays.length; attempt++) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const replyText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (replyText) {
+                        state.chatHistory.push({
+                            role: "model",
+                            parts: [{ text: replyText }]
+                        });
+                        return replyText;
+                    }
+                    throw new Error('Respuesta vacía del núcleo neural');
+                } catch (err) {
+                    if (attempt < delays.length) {
+                        await new Promise(res => setTimeout(res, delays[attempt]));
+                    } else {
+                        return 'Mis disculpas, Señor. He experimentado una interferencia en el enlace satelital con el servidor central. Por favor, verifique su conexión o su clave de acceso API e inténtelo nuevamente.';
+                    }
+                }
+            }
+        }
+
+        /**
+         * Añade mensajes a la terminal con formato limpio (soporta bloques de código y efecto holográfico)
+         */
+        function logToTerminal(sender, message, isUser = false, isTypingIndicator = false) {
+            const msgDiv = document.createElement('div');
+            if (isTypingIndicator) {
+                msgDiv.id = 'jarvis-thinking-msg';
+                msgDiv.className = 'text-cyan-400 animate-pulse italic';
+                msgDiv.innerHTML = `<strong class="font-orbitron text-[11px]">J.A.R.V.I.S.:</strong> Procesando datos en la red neural...`;
+                terminalOutput.appendChild(msgDiv);
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                return;
+            }
+
+            msgDiv.className = isUser 
+                ? 'text-white bg-cyan-500/15 border-l-2 border-cyan-300 pl-2.5 py-1.5 rounded-r' 
+                : 'text-cyan-200 bg-[#031326]/70 border-l-2 border-blue-500 pl-2.5 py-1.5 rounded-r';
+            
+            const time = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            
+            // Formatear saltos de línea y bloques de código básicos
+            const formattedMessage = message
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/```([\s\S]*?)```/g, '<pre class="bg-black/60 border border-cyan-500/30 p-2 rounded my-1.5 overflow-x-auto text-[11px] text-emerald-300 font-mono">$1</pre>')
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="text-white">$1</strong>')
+                .replace(/\n/g, '<br>');
+
+            msgDiv.innerHTML = `<div class="opacity-60 text-[10px] mb-0.5">[${time}] <strong class="font-orbitron">${sender}</strong></div><div>${formattedMessage}</div>`;
+            
+            terminalOutput.appendChild(msgDiv);
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        function clearTerminal() {
+            terminalOutput.innerHTML = '';
+            state.chatHistory = [];
+            playSoundEffect('beep');
+            const msg = 'Memoria de terminal depurada, Señor. Listo para nuevas consultas.';
+            logToTerminal('J.A.R.V.I.S.', msg);
+            jarvisSpeak(msg);
+        }
+
+        /**
+         * Procesador principal de preguntas y comandos (Combina acciones locales + IA Gemini)
+         */
+        async function askJarvis(rawInput) {
+            const query = rawInput.trim();
+            if (!query || state.isThinking) return;
+
+            const lower = query.toLowerCase();
+            playSoundEffect('beep');
+            logToTerminal('USUARIO', query, true);
+
+            // Efecto visual especial si activa/desactiva el Protocolo Fiesta
+            if (lower.includes('protocolo fiesta') || lower.includes('modo alerta')) {
+                state.alertMode = !state.alertMode;
+                document.body.classList.toggle('protocol-alert', state.alertMode);
+                if (state.alertMode) playSoundEffect('alert');
+            }
+
+            // Estado "Pensando" en el Reactor Central
+            state.isThinking = true;
+            coreWrapper.classList.add('jarvis-thinking');
+            coreStatusText.textContent = 'PROCESANDO...';
+            playSoundEffect('thinking');
+            logToTerminal('J.A.R.V.I.S.', '', false, true);
+
+            // Consultar a la Inteligencia Artificial
+            const aiResponse = await queryGeminiAI(query);
+
+            // Quitar indicador de carga
+            const thinkingEl = document.getElementById('jarvis-thinking-msg');
+            if (thinkingEl) thinkingEl.remove();
+
+            state.isThinking = false;
+            coreWrapper.classList.remove('jarvis-thinking');
+            coreStatusText.textContent = state.alertMode ? 'PROTOCOLO ACTIVO' : 'EN LÍNEA';
+
+            logToTerminal('J.A.R.V.I.S.', aiResponse, false);
+            jarvisSpeak(aiResponse);
+        }
+
+        /**
+         * Reconocimiento de Voz por Micrófono (Web Speech API)
+         */
+        function setupSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                btnMic.style.display = 'none';
+                return;
+            }
+
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => {
+                state.isListening = true;
+                window.speechSynthesis.cancel(); // Silenciar a Jarvis si estaba hablando
+                btnMic.classList.add('mic-listening');
+                micLabel.textContent = 'ESCUCHANDO...';
+                coreStatusText.textContent = 'ESCUCHANDO...';
+                playSoundEffect('beep');
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                if (transcript) {
+                    askJarvis(transcript);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.warn('Error de reconocimiento vocal:', event.error);
+                if (event.error === 'not-allowed') {
+                    logToTerminal('SISTEMA', 'Permiso de micrófono denegado por el navegador. Puede escribir su consulta en la terminal.');
+                }
+            };
+
+            recognition.onend = () => {
+                state.isListening = false;
+                btnMic.classList.remove('mic-listening');
+                micLabel.textContent = 'HABLAR CON J.A.R.V.I.S.';
+                if (!state.isThinking && !state.isSpeaking) {
+                    coreStatusText.textContent = state.alertMode ? 'PROTOCOLO ACTIVO' : 'EN LÍNEA';
+                }
+            };
+
+            btnMic.addEventListener('click', () => {
+                if (state.isListening) {
+                    recognition.stop();
+                } else {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        console.warn(e);
+                    }
+                }
+            });
+        }
+
+        /**
+         * Visualizador de Onda de Voz en tiempo real (Canvas)
+         */
+        function startVoiceVisualizer() {
+            const canvas = document.getElementById('voice-visualizer');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            let phase = 0;
+
+            function draw() {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+                const w = canvas.width;
+                const h = canvas.height;
+                const midY = h / 2;
+
+                ctx.clearRect(0, 0, w, h);
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = state.alertMode ? '#ff3b30' : '#00f3ff';
+                ctx.beginPath();
+
+                const amplitude = state.isSpeaking ? (h * 0.38) : (state.isListening ? (h * 0.28) : (state.isThinking ? (h * 0.18) : 2.5));
+                const frequency = state.isSpeaking ? 0.08 : 0.04;
+
+                for (let x = 0; x < w; x++) {
+                    const envelope = Math.sin((x / w) * Math.PI); // Suaviza los bordes
+                    const noise = state.isSpeaking ? (Math.sin(x * 0.2 + phase * 2) * 0.4) : 0;
+                    const y = midY + (Math.sin(x * frequency + phase) + noise) * amplitude * envelope;
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+
+                ctx.stroke();
+                phase += state.isSpeaking ? 0.28 : 0.08;
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        /**
+         * Actualización de reloj y telemetría simulada en tiempo real
+         */
+        function startTelemetryLoop() {
+            function updateClock() {
+                const now = new Date();
+                document.getElementById('hud-clock').textContent = now.toLocaleTimeString('es-ES');
+                document.getElementById('hud-date').textContent = now.toLocaleDateString('es-ES', { 
+                    weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' 
+                }).toUpperCase();
+            }
+
+            function updateMetrics() {
+                const cpu = Math.floor(Math.random() * (48 - 22 + 1)) + 22;
+                const ram = Math.floor(Math.random() * (64 - 51 + 1)) + 51;
+                const arc = (97.5 + Math.random() * 2.4).toFixed(1);
+                const ping = Math.floor(Math.random() * (19 - 9 + 1)) + 9;
+
+                document.getElementById('val-cpu').textContent = `${cpu}%`;
+                document.getElementById('bar-cpu').style.width = `${cpu}%`;
+
+                document.getElementById('val-ram').textContent = `${ram}%`;
+                document.getElementById('bar-ram').style.width = `${ram}%`;
+
+                document.getElementById('val-arc').textContent = `${arc}%`;
+                document.getElementById('bar-arc').style.width = `${arc}%`;
+
+                document.getElementById('val-ping').textContent = `${ping} ms`;
+            }
+
+            updateClock();
+            updateMetrics();
+            setInterval(updateClock, 1000);
+            setInterval(updateMetrics, 2800);
+        }
+
+        // Evento de inicialización al entrar a la página
+        btnInitialize.addEventListener('click', () => {
+            state.initialized = true;
+            playSoundEffect('boot');
+            populateVoices();
+            
+            bootOverlay.style.opacity = '0';
+            setTimeout(() => {
+                bootOverlay.style.display = 'none';
+            }, 700);
+
+            terminalOutput.innerHTML = '';
+            const welcomeMsg = 'En línea y listo, Señor. Todos los sistemas operativos y mi núcleo de inteligencia artificial están a su entera disposición. ¿En qué puedo asistirle hoy?';
+            logToTerminal('J.A.R.V.I.S.', welcomeMsg);
+            jarvisSpeak(welcomeMsg);
+        });
+
+        // Alternar sonido y voz
+        btnToggleAudio.addEventListener('click', () => {
+            state.audioEnabled = !state.audioEnabled;
+            audioIcon.textContent = state.audioEnabled ? '🔊' : '🔇';
+            audioLabel.textContent = state.audioEnabled ? 'VOZ: ON' : 'VOZ: OFF';
+            
+            if (!state.audioEnabled && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                state.isSpeaking = false;
+                coreWrapper.classList.remove('jarvis-speaking');
+            } else {
+                playSoundEffect('beep');
+            }
+        });
+
+        // Clic directo en el núcleo central activa el micrófono o saludo
+        coreWrapper.addEventListener('click', () => {
+            if (btnMic && btnMic.style.display !== 'none') {
+                btnMic.click();
+            } else {
+                askJarvis('¿Cuál es el estado actual del sistema?');
+            }
+        });
+
+        // Envío del formulario de preguntas
+        commandForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const val = commandInput.value;
+            commandInput.value = '';
+            askJarvis(val);
+        });
+
+        // Precargar voces del navegador e iniciar sistemas
+        window.addEventListener('load', () => {
+            if ('speechSynthesis' in window) {
+                populateVoices();
+                window.speechSynthesis.onvoiceschanged = populateVoices;
+            }
+            setupSpeechRecognition();
+            startVoiceVisualizer();
+            startTelemetryLoop();
+        });
+    </script>
+</body>
+</html>
